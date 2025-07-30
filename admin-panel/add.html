@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Courier Admin Panel</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f9f9f9; }
+    form { background: white; padding: 20px; border-radius: 10px; max-width: 800px; margin: auto; }
+    h2 { margin-top: 30px; }
+    input, select, textarea {
+      display: block; margin-bottom: 15px; padding: 10px;
+      width: 100%; box-sizing: border-box;
+    }
+    button { padding: 10px 20px; background: #0066ff; color: white; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<form id="shipmentForm">
+  <h1>🚚 Courier Tracking Admin Form</h1>
+
+  <h2>1. Company Info</h2>
+  <input type="text" id="companyName" placeholder="Courier company name" required>
+  <input type="text" id="trackingNumber" placeholder="Tracking number (unique)" required>
+  <input type="text" id="branch" placeholder="Branch/location handling shipment">
+  <input type="datetime-local" id="receivedAt">
+  <input type="text" id="deliveryAgent" placeholder="Assigned delivery agent">
+
+  <h2>2. Sender Information</h2>
+  <input type="text" id="senderName" placeholder="Full name">
+  <input type="text" id="senderPhone" placeholder="Phone number">
+  <input type="email" id="senderEmail" placeholder="Email address (optional)">
+  <input type="text" id="senderAddress" placeholder="Pickup address">
+  <input type="text" id="senderId" placeholder="Sender ID (if available)">
+
+  <h2>3. Receiver Information</h2>
+  <input type="text" id="receiverName" placeholder="Full name">
+  <input type="text" id="receiverPhone" placeholder="Phone number">
+  <input type="email" id="receiverEmail" placeholder="Email address (optional)">
+  <input type="text" id="receiverAddress" placeholder="Delivery address">
+  <input type="text" id="receiverLandmark" placeholder="Landmark (optional)">
+
+  <h2>4. Shipment Details</h2>
+  <input type="text" id="goodsType" placeholder="Type of goods">
+  <input type="text" id="weight" placeholder="Weight of package">
+  <input type="number" id="itemCount" placeholder="Number of items">
+  <input type="number" id="shipmentValue" placeholder="Shipment value">
+  <select id="paymentStatus">
+    <option value="Paid">Paid</option>
+    <option value="Unpaid">Unpaid</option>
+    <option value="COD">Cash on Delivery</option>
+  </select>
+  <select id="deliveryPriority">
+    <option value="Standard">Standard</option>
+    <option value="Express">Express</option>
+    <option value="Overnight">Overnight</option>
+  </select>
+  <input type="date" id="expectedDate">
+  <input type="date" id="actualDate">
+  <select id="deliveryStatus">
+    <option value="In Transit">In Transit</option>
+    <option value="Delivered">Delivered</option>
+    <option value="Held">Held</option>
+    <option value="Returned">Returned</option>
+  </select>
+
+  <h2>5. Shipment History</h2>
+  <textarea id="shipmentLog" placeholder="Timeline log, checkpoint updates, notes etc."></textarea>
+
+  <h2>6. Attachments (URLs for now)</h2>
+  <input type="text" id="photoUrl" placeholder="Photo of package URL">
+  <input type="text" id="deliveryNoteUrl" placeholder="Delivery note/receipt URL">
+  <input type="text" id="customerIdUrl" placeholder="Customer’s ID URL">
+
+  <button type="submit">Save Shipment</button>
+</form>
+
+<!-- Firestore logic script -->
+<script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js" type="module"></script>
+<script type="module">
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+  import { app } from "./firebase-config.js"; // <- This loads from your separate config module
+  const db = getFirestore(app);
+
+  document.getElementById("shipmentForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const trackingNumber = document.getElementById("trackingNumber").value;
+
+    const shipmentData = {
+      companyInfo: {
+        name: document.getElementById("companyName").value,
+        trackingNumber,
+        branch: document.getElementById("branch").value,
+        receivedAt: document.getElementById("receivedAt").value,
+        assignedAgent: document.getElementById("deliveryAgent").value
+      },
+      senderInfo: {
+        fullName: document.getElementById("senderName").value,
+        phone: document.getElementById("senderPhone").value,
+        email: document.getElementById("senderEmail").value,
+        address: document.getElementById("senderAddress").value,
+        senderId: document.getElementById("senderId").value
+      },
+      receiverInfo: {
+        fullName: document.getElementById("receiverName").value,
+        phone: document.getElementById("receiverPhone").value,
+        email: document.getElementById("receiverEmail").value,
+        address: document.getElementById("receiverAddress").value,
+        landmark: document.getElementById("receiverLandmark").value
+      },
+      shipmentDetails: {
+        type: document.getElementById("goodsType").value,
+        weight: document.getElementById("weight").value,
+        itemsCount: document.getElementById("itemCount").value,
+        value: document.getElementById("shipmentValue").value,
+        paymentStatus: document.getElementById("paymentStatus").value,
+        deliveryPriority: document.getElementById("deliveryPriority").value,
+        expectedDate: document.getElementById("expectedDate").value,
+        actualDate: document.getElementById("actualDate").value,
+        status: document.getElementById("deliveryStatus").value
+      },
+      shipmentHistory: document.getElementById("shipmentLog").value,
+      attachments: {
+        photo: document.getElementById("photoUrl").value,
+        deliveryNote: document.getElementById("deliveryNoteUrl").value,
+        customerId: document.getElementById("customerIdUrl").value
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      await setDoc(doc(db, "shipments", trackingNumber), shipmentData);
+      alert("Shipment saved successfully!");
+    } catch (err) {
+      alert("Error saving shipment: " + err.message);
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+      </html>
