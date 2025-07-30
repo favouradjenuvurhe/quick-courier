@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en-US" dir="ltr">
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Track Shipment | Pulse Courier</title>
   <link rel="icon" href="assets/img/favicons/favicon.ico" />
   <link href="assets/css/theme.css" rel="stylesheet" />
@@ -50,13 +50,11 @@
   </div>
 </section>
 
-<!-- Firebase Scripts -->
+<!-- Firestore Logic -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { firebaseConfig } from 'config.js';
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+  import { app } from './admin-panel/firebase-config.js';
 
-  const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
   const form = document.getElementById("tracking-form");
@@ -78,12 +76,11 @@
       }
 
       const data = snapshot.docs[0].data();
-
       const company = data.companyInfo || {};
       const sender = data.senderInfo || {};
       const receiver = data.receiverInfo || {};
       const details = data.shipmentDetails || {};
-      const history = data.shipmentHistory || "";
+      const history = data.shipmentHistory || "No updates yet.";
       const attachments = data.attachments || {};
 
       resultBox.innerHTML = `
@@ -96,27 +93,31 @@
         <p><strong>Assigned Agent:</strong> ${company.assignedAgent || "N/A"}</p>
         <hr/>
         <h6>Sender:</h6>
-        <p>${sender.fullName} (${sender.phone})<br>${sender.address}</p>
+        <p>${sender.fullName || "N/A"} (${sender.phone || "-"})<br>${sender.address || "-"}</p>
         <h6>Receiver:</h6>
-        <p>${receiver.fullName} (${receiver.phone})<br>${receiver.address}</p>
+        <p>${receiver.fullName || "N/A"} (${receiver.phone || "-"})<br>${receiver.address || "-"}</p>
         <hr/>
         <h6>Shipment Details:</h6>
-        <p><strong>Type:</strong> ${details.type} | <strong>Weight:</strong> ${details.weight}</p>
-        <p><strong>Items:</strong> ${details.itemsCount} | <strong>Value:</strong> $${details.value}</p>
-        <p><strong>Payment:</strong> ${details.paymentStatus}</p>
+        <p><strong>Type:</strong> ${details.type || "N/A"} | <strong>Weight:</strong> ${details.weight || "-"}</p>
+        <p><strong>Items:</strong> ${details.itemsCount || "0"} | <strong>Value:</strong> $${details.value || "0.00"}</p>
+        <p><strong>Payment:</strong> ${details.paymentStatus || "N/A"}</p>
         <hr/>
         <h6>History:</h6>
-        <p>${history || "No updates yet."}</p>
-        ${attachments.photo ? `<h6>Package Photo:</h6><img src="${attachments.photo}" alt="Package Photo" style="max-width: 100%; border-radius: 8px;">` : ""}
+        <p>${history}</p>
+        ${attachments.photo ? `
+          <hr/>
+          <h6>Package Photo:</h6>
+          <img src="${attachments.photo}" alt="Package Photo" style="max-width: 100%; border-radius: 8px;">
+        ` : ""}
       `;
     } catch (error) {
-      console.error(error);
-      resultBox.innerHTML = `<p class="text-danger text-center">Error retrieving data. Please try again.</p>`;
+      console.error("Error fetching tracking info:", error);
+      resultBox.innerHTML = `<p class="text-danger text-center">An error occurred while fetching tracking info. Please try again later.</p>`;
     }
   });
 </script>
 
-<!-- Bootstrap JS -->
+<!-- Bootstrap -->
 <script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
