@@ -37,7 +37,7 @@
           <form id="tracking-form">
             <div class="mb-3">
               <label for="trackingNumber" class="form-label">Enter Tracking Number</label>
-              <input type="text" class="form-control" id="trackingNumber" placeholder="e.g. PULSE12345678" required />
+              <input type="text" class="form-control" id="trackingNumber" placeholder="e.g. 737374747474" required />
             </div>
             <div class="d-grid">
               <button type="submit" class="btn btn-primary">Track</button>
@@ -52,7 +52,7 @@
 
 <!-- Firestore Logic -->
 <script type="module">
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
   import { app } from './admin-panel/firebase-config.js';
 
   const db = getFirestore(app);
@@ -67,15 +67,15 @@
     resultBox.innerHTML = "<p class='text-center text-muted'>Searching...</p>";
 
     try {
-      const q = query(collection(db, "shipments"), where("trackingNumber", "==", trackingNumber));
-      const snapshot = await getDocs(q);
+      const docRef = doc(db, "shipments", trackingNumber);
+      const docSnap = await getDoc(docRef);
 
-      if (snapshot.empty) {
+      if (!docSnap.exists()) {
         resultBox.innerHTML = "<p class='text-danger text-center'>Tracking number not found.</p>";
         return;
       }
 
-      const data = snapshot.docs[0].data();
+      const data = docSnap.data();
       const company = data.companyInfo || {};
       const sender = data.senderInfo || {};
       const receiver = data.receiverInfo || {};
