@@ -665,7 +665,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
 
-  <script type="module">
+<script type="module">
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
   import { app } from './admin-panel/firebase-config.js';
 
@@ -690,15 +690,40 @@
       }
 
       const data = docSnap.data();
+      const company = data.companyInfo || {};
+      const sender = data.senderInfo || {};
+      const receiver = data.receiverInfo || {};
       const details = data.shipmentDetails || {};
-      const status = details.status || "In Transit";
-      const expected = details.expectedDate || "N/A";
+      const history = data.shipmentHistory || "No updates yet.";
+      const attachments = data.attachments || {};
 
       resultAlt.innerHTML = `
         <div class="text-start">
-          <p><strong class="text-white">Tracking #:</strong> <span class="text-light">${trackingNumber}</span></p>
-          <p><strong class="text-white">Status:</strong> <span class="text-success">${status}</span></p>
-          <p><strong class="text-white">Expected Delivery:</strong> <span class="text-light">${expected}</span></p>
+          <h5 class="text-success">Tracking: ${trackingNumber}</h5>
+          <hr/>
+          <p><strong class="text-white">Status:</strong> <span class="text-success">${details.status || "In Transit"}</span></p>
+          <p><strong class="text-white">Delivery Priority:</strong> <span class="text-light">${details.deliveryPriority || "Standard"}</span></p>
+          <p><strong class="text-white">Expected Delivery:</strong> <span class="text-light">${details.expectedDate || "N/A"}</span></p>
+          <p><strong class="text-white">Actual Delivery:</strong> <span class="text-light">${details.actualDate || "Pending"}</span></p>
+          <p><strong class="text-white">Assigned Agent:</strong> <span class="text-light">${company.assignedAgent || "N/A"}</span></p>
+          <hr/>
+          <h6 class="text-info">Sender:</h6>
+          <p class="text-light">${sender.fullName || "N/A"} (${sender.phone || "-"})<br>${sender.address || "-"}</p>
+          <h6 class="text-info">Receiver:</h6>
+          <p class="text-light">${receiver.fullName || "N/A"} (${receiver.phone || "-"})<br>${receiver.address || "-"}</p>
+          <hr/>
+          <h6 class="text-info">Shipment Details:</h6>
+          <p class="text-light"><strong>Type:</strong> ${details.type || "N/A"} | <strong>Weight:</strong> ${details.weight || "-"}</p>
+          <p class="text-light"><strong>Items:</strong> ${details.itemsCount || "0"} | <strong>Value:</strong> $${details.value || "0.00"}</p>
+          <p class="text-light"><strong>Payment:</strong> ${details.paymentStatus || "N/A"}</p>
+          <hr/>
+          <h6 class="text-info">Shipment History:</h6>
+          <pre class="text-light" style="white-space: pre-wrap;">${typeof history === "string" ? history : JSON.stringify(history, null, 2)}</pre>
+          ${attachments.photo ? `
+            <hr/>
+            <h6 class="text-info">Package Photo:</h6>
+            <img src="${attachments.photo}" alt="Package Photo" style="max-width: 100%; border-radius: 8px;">
+          ` : ""}
         </div>
       `;
     } catch (err) {
@@ -706,7 +731,7 @@
       resultAlt.innerHTML = "<p class='text-danger text-center'>Error fetching tracking info.</p>";
     }
   });
-  </script>
+</script>
     
   </body>
 
