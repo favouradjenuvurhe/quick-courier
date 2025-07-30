@@ -74,7 +74,7 @@
             <div class="col-md-75 col-xl-6 col-xxl-5 text-md-start text-center py-8">
               <h1 class="fw-normal fs-6 fs-xxl-7">A trusted provider of </h1>
               <h1 class="fw-bolder fs-6 fs-xxl-7 mb-2">courier services.</h1>
-              <p class="fs-1 mb-5">We deliver your products safely to <br />your home in a reasonable time. </p><a class="btn btn-primary me-2" href="#!" role="button">Get started<i class="fas fa-arrow-right ms-2"></i></a>
+              <p class="fs-1 mb-5">We deliver your products safely to <br />your home in a reasonable time. </p><a class="btn btn-primary me-2" href="track.html" role="button">Track Shipment<i class="fas fa-arrow-right ms-2"></i></a>
             </div>
           </div>
         </div>
@@ -664,6 +664,27 @@
     <script src="assets/js/theme.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
+  <script>
+  document.getElementById("trackingForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const number = document.getElementById("trackingNumber").value.trim();
+    const result = document.getElementById("trackingResult");
+
+    if (number === "") {
+      result.style.display = "block";
+      result.textContent = "Please enter a valid tracking number.";
+      result.classList.remove("text-success");
+      result.classList.add("text-warning");
+    } else {
+      result.style.display = "block";
+      result.textContent = `Tracking Number: ${number} is currently in transit.`;
+      result.classList.remove("text-warning");
+      result.classList.add("text-success");
+    }
+  });
+  </script>
+    
   </body>
 
 </html>
