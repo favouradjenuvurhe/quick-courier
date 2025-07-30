@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en-US" dir="ltr">
-
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,63 +8,115 @@
   <link rel="icon" href="assets/img/favicons/favicon.ico" />
   <link href="assets/css/theme.css" rel="stylesheet" />
 </head>
-
 <body>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3 d-block" data-navbar-on-scroll="data-navbar-on-scroll">
-    <div class="container">
-      <a class="navbar-brand" href="index.html"><img src="assets/img/gallery/logo.png" height="45" alt="logo" /></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse border-top border-lg-0 mt-4 mt-lg-0" id="navbarNav">
-        <ul class="navbar-nav ms-auto pt-2 pt-lg-0 font-base">
-          <li class="nav-item px-2"><a class="nav-link" href="index.html">Home</a></li>
-          <li class="nav-item px-2"><a class="nav-link" href="#services">Our Services</a></li>
-          <li class="nav-item px-2"><a class="nav-link" href="#findUs">Find Us</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
 
-  <!-- Tracking Section -->
-  <section class="py-7" style="margin-top: 100px;">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card shadow-sm p-4">
-            <h4 class="text-center mb-4">Track Your Package</h4>
-            <form id="tracking-form">
-              <div class="mb-3">
-                <label for="trackingNumber" class="form-label">Enter Tracking Number</label>
-                <input type="text" class="form-control" id="trackingNumber" placeholder="e.g. PULSE12345678" required />
-              </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary">Track</button>
-              </div>
-            </form>
-            <div id="tracking-result" class="mt-4 text-center text-success fw-bold" style="display:none;">
-              <!-- Result will appear here -->
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light fixed-top py-3 d-block" data-navbar-on-scroll="data-navbar-on-scroll">
+  <div class="container">
+    <a class="navbar-brand" href="index.html"><img src="assets/img/gallery/logo.png" height="45" alt="logo" /></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse border-top border-lg-0 mt-4 mt-lg-0" id="navbarNav">
+      <ul class="navbar-nav ms-auto pt-2 pt-lg-0 font-base">
+        <li class="nav-item px-2"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item px-2"><a class="nav-link" href="#services">Our Services</a></li>
+        <li class="nav-item px-2"><a class="nav-link" href="#findUs">Find Us</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Tracking Section -->
+<section class="py-7" style="margin-top: 100px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm p-4">
+          <h4 class="text-center mb-4">Track Your Package</h4>
+          <form id="tracking-form">
+            <div class="mb-3">
+              <label for="trackingNumber" class="form-label">Enter Tracking Number</label>
+              <input type="text" class="form-control" id="trackingNumber" placeholder="e.g. PULSE12345678" required />
             </div>
-          </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Track</button>
+            </div>
+          </form>
+          <div id="tracking-result" class="mt-4" style="display:none;"></div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Scripts -->
-  <script src="assets/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.getElementById("tracking-form").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const number = document.getElementById("trackingNumber").value;
-      const resultBox = document.getElementById("tracking-result");
+<!-- Firebase Scripts -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { firebaseConfig } from '/admin-panel/firebase-config.js';
 
-      // Mock tracking result
-      resultBox.style.display = "block";
-      resultBox.textContent = `Tracking Number: ${number} is in transit.`;
-    });
-  </script>
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const form = document.getElementById("tracking-form");
+  const resultBox = document.getElementById("tracking-result");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const trackingNumber = document.getElementById("trackingNumber").value.trim();
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "<p class='text-center text-muted'>Searching...</p>";
+
+    try {
+      const q = query(collection(db, "shipments"), where("trackingNumber", "==", trackingNumber));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        resultBox.innerHTML = "<p class='text-danger text-center'>Tracking number not found.</p>";
+        return;
+      }
+
+      const data = snapshot.docs[0].data();
+
+      const company = data.companyInfo || {};
+      const sender = data.senderInfo || {};
+      const receiver = data.receiverInfo || {};
+      const details = data.shipmentDetails || {};
+      const history = data.shipmentHistory || "";
+      const attachments = data.attachments || {};
+
+      resultBox.innerHTML = `
+        <h5 class="text-success">Tracking: ${trackingNumber}</h5>
+        <hr/>
+        <p><strong>Status:</strong> ${details.status || "In Transit"}</p>
+        <p><strong>Delivery Priority:</strong> ${details.deliveryPriority || "Standard"}</p>
+        <p><strong>Expected Delivery:</strong> ${details.expectedDate || "N/A"}</p>
+        <p><strong>Actual Delivery:</strong> ${details.actualDate || "Pending"}</p>
+        <p><strong>Assigned Agent:</strong> ${company.assignedAgent || "N/A"}</p>
+        <hr/>
+        <h6>Sender:</h6>
+        <p>${sender.fullName} (${sender.phone})<br>${sender.address}</p>
+        <h6>Receiver:</h6>
+        <p>${receiver.fullName} (${receiver.phone})<br>${receiver.address}</p>
+        <hr/>
+        <h6>Shipment Details:</h6>
+        <p><strong>Type:</strong> ${details.type} | <strong>Weight:</strong> ${details.weight}</p>
+        <p><strong>Items:</strong> ${details.itemsCount} | <strong>Value:</strong> $${details.value}</p>
+        <p><strong>Payment:</strong> ${details.paymentStatus}</p>
+        <hr/>
+        <h6>History:</h6>
+        <p>${history || "No updates yet."}</p>
+        ${attachments.photo ? `<h6>Package Photo:</h6><img src="${attachments.photo}" alt="Package Photo" style="max-width: 100%; border-radius: 8px;">` : ""}
+      `;
+    } catch (error) {
+      console.error(error);
+      resultBox.innerHTML = `<p class="text-danger text-center">Error retrieving data. Please try again.</p>`;
+    }
+  });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="assets/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
